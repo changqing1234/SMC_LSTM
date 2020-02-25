@@ -34,34 +34,70 @@ def secPointMul(x_1, x_2, y_1, y_2):
     alpha = (x_1 - a_1) + (x_2 - a_2)
     beta = (y_1 - b_1) + (y_2 - b_2)
 
-    f_1 = c_1 + b_1 * alpha + a_1 * beta
+    f_1 = c_1 + alpha * b_1 + a_1 * beta
     numpy.seterr(divide='ignore', invalid='ignore')
     f_2 = c_2 + b_2 * alpha + a_2 * beta + alpha * beta
 
     return f_1, f_2
 
 #矩阵相乘，第一个矩阵的列等于第二个矩阵的行数
+def secMotMul(x_1, x_2, y_1, y_2):
+    a_1, a_2 = random_generator(numpy.array(x_1).shape)
+    b_1, b_2 = random_generator(numpy.array(y_1).shape)
 
+    #矩阵相乘c = a * b
+    c = numpy.dot((a_1 + a_2), (b_1 + b_2))
+    c_1 = c - numpy.random.uniform(0, c.min(), c.shape)
+    c_2 = c - c_1
+
+    alpha = x_1 - a_1 + x_2 - a_2
+    beta = y_1 - b_1 + y_2 - b_2
+
+    f_1 = c_1 + numpy.dot(alpha, b_1) + numpy.dot(a_1, beta)
+    f_2 = c_2 + numpy.dot(alpha, b_2) + numpy.dot(a_2, beta) + numpy.dot(alpha, beta)
+
+    return f_1, f_2
+
+#安全指数函数
+def secExp(u_1, u_2):
+    thegma_1, thegma_2 = secPointMul(u_1, u_2, u_1/2,  u_2/2)
+    f_1 = 1 + u_1 + thegma_1
+    f_2 = u_2 + thegma_2
+    index = 1
+
+    #while numpy.fabs((g_1 + g_2)).max() > self.precision:
+    while index < 14:
+        constant = 1 / (index + 2)
+        thegma_1, thegma_2 = secPointMul(thegma_1, thegma_2, constant * u_1, constant * u_2)
+        f_1 += thegma_1
+        f_2 += thegma_2
+        index += 1
+    #print(index)
+
+    return f_1, f_2
 
 
 
 if __name__ == '__main__':
-    x = [[12, 32, 4],
-         [23, 4, 22],
+    x = [[1, 3, 4],
+         [2, 4, 22],
          [34, 5, 33]]
 
-    y =[[23, 5, 54],
-        [44, 66, 3],
-        [1, 3, 5] ]
+    y =[[2, 5],
+        [4, 66],
+        [1, 3] ]
 
   #数据拆分
     x_1, x_2 = initParameters(x)
     y_1, y_2 = initParameters(y)
 
-    f_1, f_2 = secPointMul(x_1, x_2, y_1, y_2)
-
-    print(f_1,'\n\n', f_2)
+    f_1, f_2 = secMotMul(x_1, x_2, y_1, y_2)
 
 
-    print(numpy.array(x) * numpy.array(y), '\n\n')
+
+    f_1 , f_2 = secExp(1, 2)
     print(f_1 + f_2)
+
+
+
+    print(numpy.array(x).dot(numpy.array(y)) , '\n\n')
